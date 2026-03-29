@@ -6,7 +6,43 @@ import ScrollReveal from "@/components/ScrollReveal";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useRef, useEffect, useState, useCallback } from "react";
 
-/* ─── Chat message data ─── */
+/* ─── App Preview Video in iPhone Mockup ─── */
+function AppPreviewMockup() {
+  return (
+    <div className="relative mx-auto w-[280px] md:w-[320px]">
+      {/* Phone shell */}
+      <div className="relative bg-black rounded-[44px] p-[10px] shadow-[0_40px_80px_rgba(0,0,0,0.12)] dark:shadow-[0_40px_80px_rgba(0,0,0,0.5)]">
+        {/* Screen */}
+        <div className="bg-black rounded-[36px] overflow-hidden relative">
+          {/* Dynamic Island */}
+          <div className="absolute top-0 left-0 right-0 z-10 flex justify-center pt-2">
+            <div className="w-[90px] h-[28px] bg-black rounded-full" />
+          </div>
+
+          {/* Video */}
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full aspect-[9/19.5] object-cover"
+            poster=""
+          >
+            <source src="/app-preview.mov" type="video/quicktime" />
+            <source src="/app-preview.mov" type="video/mp4" />
+          </video>
+
+          {/* Home indicator */}
+          <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-2 z-10">
+            <div className="w-[100px] h-[4px] bg-white/30 rounded-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── iMessage Chat Demo Section ─── */
 const chatMessages = [
   { id: 1, side: "sent" as const, text: "Hey everyone! Let's plan our Tokyo trip 🇯🇵", delay: 0 },
   { id: 2, side: "sent" as const, text: "I added the TripPlanner bot to the group", delay: 0.8 },
@@ -18,53 +54,28 @@ const chatMessages = [
   { id: 8, side: "sent" as const, text: "This is amazing 🔥 sending the link to the group", delay: 7.2 },
 ];
 
-/* ─── Single chat bubble component ─── */
-function ChatBubble({
-  message,
-  visible,
-}: {
-  message: (typeof chatMessages)[0];
-  visible: boolean;
-}) {
+function ChatBubble({ message, visible }: { message: (typeof chatMessages)[0]; visible: boolean }) {
   const isSent = message.side === "sent";
-
   return (
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{
-            opacity: 0,
-            scale: 0.6,
-            x: isSent ? 40 : -40,
-            y: 10,
-          }}
-          animate={{
-            opacity: 1,
-            scale: 1,
-            x: 0,
-            y: 0,
-          }}
-          transition={{
-            duration: 0.45,
-            ease: [0.175, 0.885, 0.32, 1.275],
-          }}
+          initial={{ opacity: 0, scale: 0.6, x: isSent ? 40 : -40, y: 10 }}
+          animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+          transition={{ duration: 0.45, ease: [0.175, 0.885, 0.32, 1.275] }}
           className={`flex ${isSent ? "justify-end" : "justify-start"}`}
         >
-          <div className="flex flex-col gap-0.5 max-w-[75%]">
+          <div className="flex flex-col gap-0.5 max-w-[80%]">
             {!isSent && message.sender && (
-              <span className="text-[10px] text-[var(--text-tertiary)] ml-3 font-medium">
-                {message.sender}
-              </span>
+              <span className="text-[11px] text-[var(--text-tertiary)] ml-3 font-medium">{message.sender}</span>
             )}
-            <div
-              className={`px-4 py-2.5 text-[14px] leading-[1.4] ${
-                isSent
-                  ? "bg-black dark:bg-white text-white dark:text-black rounded-[20px] rounded-br-[6px]"
-                  : message.isCard
-                  ? "bg-[var(--bg-tertiary)] dark:bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-[20px] rounded-bl-[6px] font-mono text-[13px] whitespace-pre-line border border-[var(--border)]"
-                  : "bg-[var(--bubble-received)] text-[var(--text-primary)] rounded-[20px] rounded-bl-[6px]"
-              }`}
-            >
+            <div className={`px-4 py-2.5 text-[15px] leading-[1.45] ${
+              isSent
+                ? "bg-black dark:bg-white text-white dark:text-black rounded-[20px] rounded-br-[6px]"
+                : message.isCard
+                ? "bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-[20px] rounded-bl-[6px] font-mono text-[13px] whitespace-pre-line border border-[var(--border)]"
+                : "bg-[var(--bubble-received)] text-[var(--text-primary)] rounded-[20px] rounded-bl-[6px]"
+            }`}>
               {message.text}
             </div>
           </div>
@@ -74,7 +85,6 @@ function ChatBubble({
   );
 }
 
-/* ─── Typing indicator ─── */
 function TypingIndicator({ visible }: { visible: boolean }) {
   return (
     <AnimatePresence>
@@ -87,9 +97,7 @@ function TypingIndicator({ visible }: { visible: boolean }) {
           className="flex justify-start"
         >
           <div className="flex flex-col gap-0.5">
-            <span className="text-[10px] text-[var(--text-tertiary)] ml-3 font-medium">
-              TripPlanner
-            </span>
+            <span className="text-[11px] text-[var(--text-tertiary)] ml-3 font-medium">TripPlanner</span>
             <div className="typing-indicator">
               <div className="typing-dot" />
               <div className="typing-dot" />
@@ -102,20 +110,18 @@ function TypingIndicator({ visible }: { visible: boolean }) {
   );
 }
 
-/* ─── iMessage phone mockup ─── */
-function IMessageMockup() {
+function ChatDemo() {
   const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
   const [showTyping, setShowTyping] = useState(false);
   const [started, setStarted] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
 
   const animateMessages = useCallback(async () => {
     for (let i = 0; i < chatMessages.length; i++) {
       const msg = chatMessages[i];
       const prevMsg = chatMessages[i - 1];
       const waitTime = i === 0 ? 600 : (msg.delay - (prevMsg?.delay ?? 0)) * 1000;
-
-      // Show typing if next message is from bot
       if (msg.side === "received") {
         setShowTyping(true);
         await new Promise((r) => setTimeout(r, Math.min(waitTime, 800)));
@@ -124,88 +130,54 @@ function IMessageMockup() {
       } else {
         await new Promise((r) => setTimeout(r, waitTime));
       }
-
       setVisibleMessages((prev) => [...prev, msg.id]);
     }
   }, []);
 
   useEffect(() => {
-    if (!started) {
-      setStarted(true);
-      animateMessages();
-    }
+    if (started) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !started) {
+        setStarted(true);
+        animateMessages();
+      }
+    }, { threshold: 0.3 });
+    if (sectionRef.current) observer.observe(sectionRef.current);
+    return () => observer.disconnect();
   }, [started, animateMessages]);
 
   useEffect(() => {
-    // Scroll only within the chat container, not the outer page
     const el = chatEndRef.current;
     if (!el) return;
     const container = el.closest("[data-chat-scroll]");
-    if (container) {
-      container.scrollTop = container.scrollHeight;
-    }
+    if (container) container.scrollTop = container.scrollHeight;
   }, [visibleMessages, showTyping]);
 
   return (
-    <div className="relative mx-auto w-[300px] md:w-[340px]">
-      {/* Phone shell */}
-      <div className="relative bg-black rounded-[44px] p-[10px] shadow-[0_40px_80px_rgba(0,0,0,0.12)] dark:shadow-[0_40px_80px_rgba(0,0,0,0.5)]">
-        {/* Screen */}
-        <div className="bg-white dark:bg-[#1C1C1E] rounded-[36px] overflow-hidden">
-          {/* Notch */}
-          <div className="flex justify-center pt-2 pb-1">
-            <div className="w-[90px] h-[28px] bg-black rounded-full" />
+    <div ref={sectionRef} className="max-w-lg mx-auto">
+      <div className="card overflow-hidden">
+        {/* iMessage header */}
+        <div className="px-4 py-3 flex items-center justify-between border-b border-[var(--border)]">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          <div className="text-center">
+            <p className="text-[13px] font-semibold">Tokyo Trip 🗼</p>
+            <p className="text-[10px] text-[var(--text-tertiary)]">4 people</p>
           </div>
+          <div className="w-6 h-6 rounded-full bg-[var(--bg-tertiary)]" />
+        </div>
 
-          {/* iMessage header */}
-          <div className="px-4 py-2 flex items-center justify-between border-b border-black/[0.04] dark:border-white/[0.06]">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-            <div className="text-center">
-              <p className="text-[12px] font-semibold text-black dark:text-white">Tokyo Trip 🗼</p>
-              <p className="text-[10px] text-[var(--text-tertiary)]">4 people</p>
-            </div>
-            <div className="w-6 h-6 rounded-full bg-[var(--bg-tertiary)] dark:bg-[var(--bg-dark-tertiary)]" />
+        {/* Chat area */}
+        <div data-chat-scroll className="h-[420px] overflow-y-auto px-4 py-4 space-y-2.5">
+          <div className="text-center mb-2">
+            <span className="text-[10px] text-[var(--text-tertiary)] font-medium">Today 2:41 PM</span>
           </div>
-
-          {/* Chat area */}
-          <div data-chat-scroll className="h-[380px] md:h-[420px] overflow-y-auto px-3 py-3 space-y-2.5">
-            {/* Time stamp */}
-            <div className="text-center">
-              <span className="text-[10px] text-[var(--text-tertiary)] font-medium">
-                Today 2:41 PM
-              </span>
-            </div>
-
-            {chatMessages.map((msg) => (
-              <ChatBubble
-                key={msg.id}
-                message={msg}
-                visible={visibleMessages.includes(msg.id)}
-              />
-            ))}
-
-            <TypingIndicator visible={showTyping} />
-            <div ref={chatEndRef} />
-          </div>
-
-          {/* Input bar */}
-          <div className="px-3 py-2 border-t border-black/[0.04] dark:border-white/[0.06] flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full border-2 border-[var(--text-tertiary)] flex items-center justify-center">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-            </div>
-            <div className="flex-1 h-8 rounded-full bg-[var(--bg-secondary)] dark:bg-[var(--bg-dark-tertiary)] border border-[var(--border)] px-3 flex items-center">
-              <span className="text-[13px] text-[var(--text-tertiary)]">iMessage</span>
-            </div>
-          </div>
-
-          {/* Home indicator */}
-          <div className="flex justify-center py-2">
-            <div className="w-[100px] h-[4px] bg-black/20 dark:bg-white/20 rounded-full" />
-          </div>
+          {chatMessages.map((msg) => (
+            <ChatBubble key={msg.id} message={msg} visible={visibleMessages.includes(msg.id)} />
+          ))}
+          <TypingIndicator visible={showTyping} />
+          <div ref={chatEndRef} />
         </div>
       </div>
     </div>
@@ -336,14 +308,14 @@ export default function LandingPage() {
               </motion.div>
             </div>
 
-            {/* Right — iPhone with iMessage */}
+            {/* Right — iPhone with App Preview Video */}
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 0.9, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
               className="flex-shrink-0"
             >
-              <IMessageMockup />
+              <AppPreviewMockup />
             </motion.div>
           </div>
         </motion.div>
@@ -378,6 +350,25 @@ export default function LandingPage() {
               </ScrollReveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ═══ CHAT DEMO ═══ */}
+      <section className="py-24 md:py-32">
+        <div className="max-w-5xl mx-auto px-6">
+          <ScrollReveal>
+            <div className="text-center mb-12">
+              <h2 className="text-title-1">
+                See it in action.
+              </h2>
+              <p className="mt-4 text-body-large text-[var(--text-secondary)] max-w-lg mx-auto">
+                A real conversation. The bot joins your group chat and builds the perfect trip.
+              </p>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal>
+            <ChatDemo />
+          </ScrollReveal>
         </div>
       </section>
 
