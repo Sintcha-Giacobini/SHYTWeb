@@ -6,43 +6,95 @@ import ScrollReveal from "@/components/ScrollReveal";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useRef, useEffect, useState, useCallback } from "react";
 
-/* ─── App Preview Video in iPhone Mockup ─── */
-function AppPreviewMockup() {
+/* ─── Video Modal ─── */
+function VideoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+      videoRef.current?.play();
+    } else {
+      document.body.style.overflow = "";
+      videoRef.current?.pause();
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  // Close on Escape
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    if (open) window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [open, onClose]);
+
   return (
-    <div className="relative mx-auto w-[280px] md:w-[320px]">
-      {/* Phone shell */}
-      <div className="relative bg-black rounded-[44px] p-[10px] shadow-[0_40px_80px_rgba(0,0,0,0.12)] dark:shadow-[0_40px_80px_rgba(0,0,0,0.5)]">
-        {/* Screen */}
-        <div className="bg-black rounded-[36px] overflow-hidden relative">
-          {/* Dynamic Island */}
-          <div className="absolute top-0 left-0 right-0 z-10 flex justify-center pt-2">
-            <div className="w-[90px] h-[28px] bg-black rounded-full" />
-          </div>
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center px-4"
+          onClick={onClose}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" />
 
-          {/* Video */}
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full aspect-[9/19.5] object-cover"
-            poster=""
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-6 right-6 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
           >
-            <source src="/app-preview.mov" type="video/quicktime" />
-            <source src="/app-preview.mov" type="video/mp4" />
-          </video>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
 
-          {/* Home indicator */}
-          <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-2 z-10">
-            <div className="w-[100px] h-[4px] bg-white/30 rounded-full" />
-          </div>
-        </div>
-      </div>
-    </div>
+          {/* Phone mockup with video */}
+          <motion.div
+            initial={{ scale: 0.85, y: 30 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.85, y: 30 }}
+            transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="relative z-10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative mx-auto w-[300px] md:w-[340px]">
+              <div className="relative bg-black rounded-[48px] p-[10px] shadow-[0_0_80px_rgba(255,255,255,0.06)]">
+                <div className="bg-black rounded-[40px] overflow-hidden relative">
+                  {/* Dynamic Island */}
+                  <div className="absolute top-0 left-0 right-0 z-10 flex justify-center pt-2.5">
+                    <div className="w-[90px] h-[28px] bg-black rounded-full" />
+                  </div>
+
+                  <video
+                    ref={videoRef}
+                    loop
+                    muted
+                    playsInline
+                    className="w-full aspect-[9/19.5] object-cover"
+                  >
+                    <source src="/app-preview.mov" type="video/quicktime" />
+                    <source src="/app-preview.mov" type="video/mp4" />
+                  </video>
+
+                  {/* Home indicator */}
+                  <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-2 z-10">
+                    <div className="w-[100px] h-[4px] bg-white/30 rounded-full" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
-/* ─── iMessage Chat Demo Section ─── */
+/* ─── iMessage Chat Bubbles ─── */
 const chatMessages = [
   { id: 1, side: "sent" as const, text: "Hey everyone! Let's plan our Tokyo trip 🇯🇵", delay: 0 },
   { id: 2, side: "sent" as const, text: "I added the TripPlanner bot to the group", delay: 0.8 },
@@ -110,12 +162,12 @@ function TypingIndicator({ visible }: { visible: boolean }) {
   );
 }
 
-function ChatDemo() {
+/* ─── iMessage Phone Mockup (hero) ─── */
+function IMessageMockup() {
   const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
   const [showTyping, setShowTyping] = useState(false);
   const [started, setStarted] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const sectionRef = useRef<HTMLDivElement>(null);
 
   const animateMessages = useCallback(async () => {
     for (let i = 0; i < chatMessages.length; i++) {
@@ -135,15 +187,10 @@ function ChatDemo() {
   }, []);
 
   useEffect(() => {
-    if (started) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !started) {
-        setStarted(true);
-        animateMessages();
-      }
-    }, { threshold: 0.3 });
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
+    if (!started) {
+      setStarted(true);
+      animateMessages();
+    }
   }, [started, animateMessages]);
 
   useEffect(() => {
@@ -154,30 +201,50 @@ function ChatDemo() {
   }, [visibleMessages, showTyping]);
 
   return (
-    <div ref={sectionRef} className="max-w-lg mx-auto">
-      <div className="card overflow-hidden">
-        {/* iMessage header */}
-        <div className="px-4 py-3 flex items-center justify-between border-b border-[var(--border)]">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          <div className="text-center">
-            <p className="text-[13px] font-semibold">Tokyo Trip 🗼</p>
-            <p className="text-[10px] text-[var(--text-tertiary)]">4 people</p>
+    <div className="relative mx-auto w-[300px] md:w-[340px]">
+      <div className="relative bg-black rounded-[44px] p-[10px] shadow-[0_40px_80px_rgba(0,0,0,0.12)] dark:shadow-[0_40px_80px_rgba(0,0,0,0.5)]">
+        <div className="bg-white dark:bg-[#1C1C1E] rounded-[36px] overflow-hidden">
+          {/* Notch */}
+          <div className="flex justify-center pt-2 pb-1">
+            <div className="w-[90px] h-[28px] bg-black rounded-full" />
           </div>
-          <div className="w-6 h-6 rounded-full bg-[var(--bg-tertiary)]" />
-        </div>
-
-        {/* Chat area */}
-        <div data-chat-scroll className="h-[420px] overflow-y-auto px-4 py-4 space-y-2.5">
-          <div className="text-center mb-2">
-            <span className="text-[10px] text-[var(--text-tertiary)] font-medium">Today 2:41 PM</span>
+          {/* iMessage header */}
+          <div className="px-4 py-2 flex items-center justify-between border-b border-black/[0.04] dark:border-white/[0.06]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+            <div className="text-center">
+              <p className="text-[12px] font-semibold text-black dark:text-white">Tokyo Trip 🗼</p>
+              <p className="text-[10px] text-[var(--text-tertiary)]">4 people</p>
+            </div>
+            <div className="w-6 h-6 rounded-full bg-[var(--bg-tertiary)]" />
           </div>
-          {chatMessages.map((msg) => (
-            <ChatBubble key={msg.id} message={msg} visible={visibleMessages.includes(msg.id)} />
-          ))}
-          <TypingIndicator visible={showTyping} />
-          <div ref={chatEndRef} />
+          {/* Chat area */}
+          <div data-chat-scroll className="h-[380px] md:h-[420px] overflow-y-auto px-3 py-3 space-y-2.5">
+            <div className="text-center">
+              <span className="text-[10px] text-[var(--text-tertiary)] font-medium">Today 2:41 PM</span>
+            </div>
+            {chatMessages.map((msg) => (
+              <ChatBubble key={msg.id} message={msg} visible={visibleMessages.includes(msg.id)} />
+            ))}
+            <TypingIndicator visible={showTyping} />
+            <div ref={chatEndRef} />
+          </div>
+          {/* Input bar */}
+          <div className="px-3 py-2 border-t border-black/[0.04] dark:border-white/[0.06] flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full border-2 border-[var(--text-tertiary)] flex items-center justify-center">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </div>
+            <div className="flex-1 h-8 rounded-full bg-[var(--bg-secondary)] dark:bg-[#2C2C2E] border border-[var(--border)] px-3 flex items-center">
+              <span className="text-[13px] text-[var(--text-tertiary)]">iMessage</span>
+            </div>
+          </div>
+          {/* Home indicator */}
+          <div className="flex justify-center py-2">
+            <div className="w-[100px] h-[4px] bg-black/20 dark:bg-white/20 rounded-full" />
+          </div>
         </div>
       </div>
     </div>
@@ -222,25 +289,14 @@ const features = [
 
 /* ─── Steps ─── */
 const steps = [
-  {
-    number: "1",
-    title: "Add the bot",
-    description: "Add TripPlanner to your iMessage group chat.",
-  },
-  {
-    number: "2",
-    title: "Tell it where to go",
-    description: "Just type naturally — \"Plan a trip to Tokyo for 4 people in April.\"",
-  },
-  {
-    number: "3",
-    title: "Vote, customize, go",
-    description: "Vote on options, tweak the plan, view the live dashboard.",
-  },
+  { number: "1", title: "Add the bot", description: "Add TripPlanner to your iMessage group chat." },
+  { number: "2", title: "Tell it where to go", description: "Just type naturally — \"Plan a trip to Tokyo for 4 people in April.\"" },
+  { number: "3", title: "Vote, customize, go", description: "Vote on options, tweak the plan, view the live dashboard." },
 ];
 
 /* ─── MAIN PAGE ─── */
 export default function LandingPage() {
+  const [videoOpen, setVideoOpen] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -253,9 +309,11 @@ export default function LandingPage() {
     <div className="min-h-screen noise-overlay">
       <Navigation />
 
+      {/* Video Modal */}
+      <VideoModal open={videoOpen} onClose={() => setVideoOpen(false)} />
+
       {/* ═══ HERO ═══ */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-14">
-        {/* Subtle radial glow */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-black/[0.02] dark:bg-white/[0.03] rounded-full blur-[100px]" />
 
         <motion.div
@@ -290,15 +348,15 @@ export default function LandingPage() {
                 transition={{ duration: 0.6, delay: 0.4 }}
                 className="mt-8 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start"
               >
-                <a
-                  href="#"
+                <button
+                  onClick={() => setVideoOpen(true)}
                   className="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full bg-black dark:bg-white text-white dark:text-black font-medium text-[15px] hover:opacity-80 transition-all active:scale-[0.97]"
                 >
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
                   </svg>
                   Get on App Store
-                </a>
+                </button>
                 <button
                   onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
                   className="inline-flex items-center justify-center px-7 py-3.5 rounded-full border border-[var(--border)] font-medium text-[15px] hover:bg-black/[0.03] dark:hover:bg-white/[0.05] transition-colors"
@@ -308,14 +366,14 @@ export default function LandingPage() {
               </motion.div>
             </div>
 
-            {/* Right — iPhone with App Preview Video */}
+            {/* Right — iPhone with iMessage */}
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 0.9, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
               className="flex-shrink-0"
             >
-              <AppPreviewMockup />
+              <IMessageMockup />
             </motion.div>
           </div>
         </motion.div>
@@ -353,25 +411,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══ CHAT DEMO ═══ */}
-      <section className="py-24 md:py-32">
-        <div className="max-w-5xl mx-auto px-6">
-          <ScrollReveal>
-            <div className="text-center mb-12">
-              <h2 className="text-title-1">
-                See it in action.
-              </h2>
-              <p className="mt-4 text-body-large text-[var(--text-secondary)] max-w-lg mx-auto">
-                A real conversation. The bot joins your group chat and builds the perfect trip.
-              </p>
-            </div>
-          </ScrollReveal>
-          <ScrollReveal>
-            <ChatDemo />
-          </ScrollReveal>
-        </div>
-      </section>
-
       {/* ═══ HOW IT WORKS ═══ */}
       <section id="how-it-works" className="py-24 md:py-32">
         <div className="max-w-3xl mx-auto px-6">
@@ -385,7 +424,6 @@ export default function LandingPage() {
           </ScrollReveal>
 
           <div className="relative">
-            {/* Vertical line */}
             <div className="absolute left-6 md:left-8 top-0 bottom-0 w-px">
               <motion.div
                 className="w-full bg-black/10 dark:bg-white/10 rounded-full"
@@ -430,15 +468,15 @@ export default function LandingPage() {
                   Download TripPlanner. Add it to your group chat. Let AI handle the rest.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <a
-                    href="#"
+                  <button
+                    onClick={() => setVideoOpen(true)}
                     className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-full bg-black dark:bg-white text-white dark:text-black font-medium text-[16px] hover:opacity-80 transition-all active:scale-[0.97]"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
                     </svg>
                     Get Started
-                  </a>
+                  </button>
                   <a
                     href="#"
                     className="inline-flex items-center justify-center px-8 py-4 rounded-full border border-[var(--border)] font-medium text-[16px] hover:bg-black/[0.03] dark:hover:bg-white/[0.05] transition-colors"
