@@ -6,94 +6,6 @@ import ScrollReveal from "@/components/ScrollReveal";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useRef, useEffect, useState, useCallback } from "react";
 
-/* ─── Video Modal ─── */
-function VideoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-      videoRef.current?.play();
-    } else {
-      document.body.style.overflow = "";
-      videoRef.current?.pause();
-    }
-    return () => { document.body.style.overflow = ""; };
-  }, [open]);
-
-  // Close on Escape
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    if (open) window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [open, onClose]);
-
-  return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center px-4"
-          onClick={onClose}
-        >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" />
-
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-6 right-6 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
-
-          {/* Phone mockup with video */}
-          <motion.div
-            initial={{ scale: 0.85, y: 30 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.85, y: 30 }}
-            transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="relative z-10"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="relative mx-auto w-[300px] md:w-[340px]">
-              <div className="relative bg-black rounded-[48px] p-[10px] shadow-[0_0_80px_rgba(255,255,255,0.06)]">
-                <div className="bg-black rounded-[40px] overflow-hidden relative">
-                  {/* Dynamic Island */}
-                  <div className="absolute top-0 left-0 right-0 z-10 flex justify-center pt-2.5">
-                    <div className="w-[90px] h-[28px] bg-black rounded-full" />
-                  </div>
-
-                  <video
-                    ref={videoRef}
-                    loop
-                    muted
-                    playsInline
-                    className="w-full aspect-[9/19.5] object-cover"
-                  >
-                    <source src="/app-preview.mov" type="video/quicktime" />
-                    <source src="/app-preview.mov" type="video/mp4" />
-                  </video>
-
-                  {/* Home indicator */}
-                  <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-2 z-10">
-                    <div className="w-[100px] h-[4px] bg-white/30 rounded-full" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
-
 /* ─── iMessage Chat Bubbles ─── */
 const chatMessages = [
   { id: 1, side: "sent" as const, text: "Hey everyone! Let's plan our Tokyo trip 🇯🇵", delay: 0 },
@@ -296,7 +208,6 @@ const steps = [
 
 /* ─── MAIN PAGE ─── */
 export default function LandingPage() {
-  const [videoOpen, setVideoOpen] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -308,9 +219,6 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen noise-overlay">
       <Navigation />
-
-      {/* Video Modal */}
-      <VideoModal open={videoOpen} onClose={() => setVideoOpen(false)} />
 
       {/* ═══ HERO ═══ */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-14">
@@ -348,15 +256,15 @@ export default function LandingPage() {
                 transition={{ duration: 0.6, delay: 0.4 }}
                 className="mt-8 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start"
               >
-                <button
-                  onClick={() => setVideoOpen(true)}
+                <a
+                  href="#"
                   className="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full bg-black dark:bg-white text-white dark:text-black font-medium text-[15px] hover:opacity-80 transition-all active:scale-[0.97]"
                 >
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
                   </svg>
                   Get on App Store
-                </button>
+                </a>
                 <button
                   onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
                   className="inline-flex items-center justify-center px-7 py-3.5 rounded-full border border-[var(--border)] font-medium text-[15px] hover:bg-black/[0.03] dark:hover:bg-white/[0.05] transition-colors"
@@ -408,6 +316,51 @@ export default function LandingPage() {
               </ScrollReveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ═══ APP PREVIEW ═══ */}
+      <section className="py-24 md:py-32">
+        <div className="max-w-5xl mx-auto px-6">
+          <ScrollReveal>
+            <div className="text-center mb-14">
+              <h2 className="text-title-1">See the app.</h2>
+              <p className="mt-4 text-body-large text-[var(--text-secondary)] max-w-lg mx-auto">
+                A quick look at what TripPlanner feels like on your iPhone.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal>
+            <div className="flex justify-center">
+              <div className="relative mx-auto w-[280px] md:w-[320px]">
+                <div className="relative bg-black rounded-[48px] p-[10px] shadow-[0_40px_80px_rgba(0,0,0,0.1)] dark:shadow-[0_40px_80px_rgba(0,0,0,0.5)]">
+                  <div className="bg-black rounded-[40px] overflow-hidden relative">
+                    {/* Dynamic Island */}
+                    <div className="absolute top-0 left-0 right-0 z-10 flex justify-center pt-2.5">
+                      <div className="w-[90px] h-[28px] bg-black rounded-full" />
+                    </div>
+
+                    <video
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full aspect-[9/19.5] object-cover"
+                    >
+                      <source src="/app-preview.mov" type="video/quicktime" />
+                      <source src="/app-preview.mov" type="video/mp4" />
+                    </video>
+
+                    {/* Home indicator */}
+                    <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-2 z-10">
+                      <div className="w-[100px] h-[4px] bg-white/30 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -468,15 +421,15 @@ export default function LandingPage() {
                   Download TripPlanner. Add it to your group chat. Let AI handle the rest.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <button
-                    onClick={() => setVideoOpen(true)}
+                  <a
+                    href="#"
                     className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-full bg-black dark:bg-white text-white dark:text-black font-medium text-[16px] hover:opacity-80 transition-all active:scale-[0.97]"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
                     </svg>
                     Get Started
-                  </button>
+                  </a>
                   <a
                     href="#"
                     className="inline-flex items-center justify-center px-8 py-4 rounded-full border border-[var(--border)] font-medium text-[16px] hover:bg-black/[0.03] dark:hover:bg-white/[0.05] transition-colors"
