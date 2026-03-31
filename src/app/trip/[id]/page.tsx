@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Navigation from "@/components/Navigation";
 import TripHeader from "@/components/trip/TripHeader";
 import TabNavigation, { TabName } from "@/components/trip/TabNavigation";
@@ -14,7 +16,29 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function TripPage() {
   const [activeTab, setActiveTab] = useState<TabName>("Overview");
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const trip = mockTrip;
+
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/auth/signin?callbackUrl=" + encodeURIComponent(window.location.pathname));
+    }
+  }, [status, router]);
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen">
+        <Navigation />
+        <div className="flex items-center justify-center pt-32">
+          <div className="w-8 h-8 border-2 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) return null;
 
   return (
     <div className="min-h-screen">

@@ -3,6 +3,9 @@
 import Navigation from "@/components/Navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const trips = [
   {
@@ -35,13 +38,38 @@ const trips = [
 ];
 
 export default function TripsPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/auth/signin?callbackUrl=/trips");
+    }
+  }, [status, router]);
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen">
+        <Navigation />
+        <div className="flex items-center justify-center pt-32">
+          <div className="w-8 h-8 border-2 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) return null;
+
   return (
     <div className="min-h-screen">
       <Navigation />
       <main className="max-w-4xl mx-auto px-6 pt-24 pb-16">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <h1 className="text-title-1 mb-1">Your Trips</h1>
-          <p className="text-[var(--text-secondary)] mb-8">Manage your planned adventures.</p>
+          <p className="text-[var(--text-secondary)] mb-8">
+            Welcome back{session.user?.name ? `, ${session.user.name}` : ""}. Manage your planned adventures.
+          </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

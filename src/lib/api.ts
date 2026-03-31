@@ -1,32 +1,53 @@
-const API_BASE = "https://glorious-nourishment-production.up.railway.app";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "https://glorious-nourishment-production.up.railway.app";
+
+async function apiFetch(path: string, options?: RequestInit) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status} ${res.statusText}`);
+  }
+  return res.json();
+}
 
 export async function fetchDashboard(participantId: string) {
-  const res = await fetch(`${API_BASE}/participant/${participantId}/dashboard`, {
-    next: { revalidate: 30 },
-  });
-  if (!res.ok) throw new Error("Failed to fetch dashboard");
-  return res.json();
+  return apiFetch(`/participant/${participantId}/dashboard`);
 }
 
 export async function updatePreferences(
   sessionId: string,
   preferences: Record<string, number>
 ) {
-  const res = await fetch(`${API_BASE}/session/${sessionId}/preferences`, {
+  return apiFetch(`/session/${sessionId}/preferences`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(preferences),
   });
-  if (!res.ok) throw new Error("Failed to update preferences");
-  return res.json();
 }
 
-export async function submitVote(pollId: string, optionId: string, participantId: string) {
-  const res = await fetch(`${API_BASE}/vote-api/${pollId}`, {
+export async function submitVote(
+  pollId: string,
+  optionId: string,
+  participantId: string
+) {
+  return apiFetch(`/vote-api/${pollId}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ optionId, participantId }),
   });
-  if (!res.ok) throw new Error("Failed to submit vote");
-  return res.json();
+}
+
+/**
+ * Link an Apple Account to a backend participant.
+ * Call after Sign in with Apple to sync the user.
+ */
+export async function linkAppleAccount(appleId: string, name: string, email?: string | null) {
+  return apiFetch(`/auth/apple/link`, {
+    method: "POST",
+    body: JSON.stringify({ appleId, name, email }),
+  });
 }

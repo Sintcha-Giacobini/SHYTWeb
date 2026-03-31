@@ -2,10 +2,20 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, Suspense } from "react";
 
-export default function SignInPage() {
+function SignInContent() {
+  const { data: session } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/trips";
+
+  // Redirect if already signed in
+  useEffect(() => {
+    if (session) router.replace(callbackUrl);
+  }, [session, router, callbackUrl]);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6">
@@ -27,7 +37,7 @@ export default function SignInPage() {
         </p>
 
         <button
-          onClick={() => router.push("/trips")}
+          onClick={() => signIn("apple", { callbackUrl })}
           className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-black dark:bg-white text-white dark:text-black font-medium text-[15px] hover:opacity-80 transition-opacity active:scale-[0.97]"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -43,5 +53,17 @@ export default function SignInPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   );
 }
